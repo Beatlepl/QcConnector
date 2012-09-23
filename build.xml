@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project name="QcConnector" default="zip" basedir=".">
+	<description description="build QcConnector distributable" />
+
+	<property environment="env" description="Include system environment variables" />
+	<property name="dir.toolchain" value="${env.TCROOT}" />
+
+	<property name="target" value="1.6" />
+	<property name="source" value="1.6" />
+	<property name="debuglevel" value="source,lines,vars" />
+	<property name="verbose" value="false" />
+
+    <!-- Source code location -->
+	<property name="dir.src.main" value="${basedir}/src/main"/>
+    <property name="dir.src.plugin" value="${basedir}/src/plugin/java"/>
+	<property name="dir.config" value="${basedir}/config"/>
+
+	<property name="dir.lib" value="${basedir}/lib"/>
+
+	<!--Build -->
+	<property name="build.dir" value="build"/>
+	<property name="dist.dir" value="${build.dir}/dist"/>
+	<property name="dir.build.main" value="${build.dir}/main/classes" description="main classes go here" />
+	<property name="dir.dist.lib" value="${dist.dir}/lib"/>
+	<property name="dir.dist.conf" value="${dist.dir}/config"/>
+    <property name="dir.docs" value="${dist.dir}/docs" description="Generated javadoc will go here" />
+    <property name="dir.docs.main" value="${dir.docs}/main"/>
+
+    <property name="qc-connector.zip" value="qc-connector.zip"/>
+    <property name="qc-connector.jar" value="qc-connector.jar"/>
+
+	<!--  Set the Generic CLASSPATH for building QC. -->
+	<path id="lib.classpath">
+      <pathelement location="${dir.toolchain}/noarch/logback-0.9.18/logback-classic-0.9.18.jar"/>
+      <pathelement location="${dir.toolchain}/noarch/logback-0.9.18/logback-core-0.9.18.jar"/>
+      <pathelement location="${dir.toolchain}/noarch/slf4j-1.5.10/slf4j-api-1.5.10.jar"/>
+      <pathelement location="${dir.toolchain}/noarch/apache-commons-configuration-1.6/commons-configuration-1.6.jar"/>
+      <pathelement location="${dir.toolchain}/noarch/apache-commons-collections-3.2.1/commons-collections-3.2.1.jar"/>
+	  <pathelement location="${dir.toolchain}/noarch/apache-commons-logging-1.1.1/commons-logging-1.1.1.jar" />
+	  <pathelement location="${dir.toolchain}/noarch/apache-commons-lang-2.5/commons-lang-2.5.jar" />
+	  <pathelement location="${dir.toolchain}/noarch/apache-commons-beanutils-1.8.3/commons-beanutils-1.8.3.jar" />
+  	  <pathelement location="${dir.lib}/testng-beta.jar" />
+	</path>
+
+	<target name="compile-main" description="Compiles common code">
+		<mkdir dir="${dir.build.main}" />
+		<javac srcdir="${dir.src.main}:${dir.src.plugin}" destdir="${dir.build.main}" debug="on" debuglevel="${debuglevel}" includeantruntime="no">
+			<classpath refid="lib.classpath" />
+		</javac>
+	</target>
+
+    <target name="qc-jars" depends="compile-main" description="Creates QC jars">
+        <jar jarfile="${build.dir}/${qc-connector.jar}" basedir="${dir.build.main}" />
+    </target>
+
+    <target name="dist" depends="qc-jars" description="Creates QC connector distribution">
+        <mkdir dir="${dist.dir}" />
+        <copy todir="${dir.dist.lib}" flatten="true" verbose="true">
+            <fileset dir="${build.dir}" includes="*.jar" />
+        </copy>
+		<copy todir="${dir.dist.lib}" flatten="true" verbose="true">
+            <path refid="lib.classpath" />
+        </copy>
+        <copy todir="${dir.dist.conf}">
+            <fileset dir="${dir.config}" includes="**/*" />
+        </copy>
+	</target>
+
+    <target name="zip" depends="dist" description="Creates QC connector distribution zip">
+        <copy file="${basedir}/run-qc.xml" tofile="${dist.dir}/build.xml" />
+        <zip destfile="${qc-connector.zip}">
+            <zipfileset dir="${dist.dir}" />
+        </zip>
+    </target>
+
+    <target name="javadoc-qc" depends="compile-main">
+     	<mkdir dir="${dir.docs.main}" />
+        <javadoc destdir="${dir.docs.main}" windowtitle="QC Connector APIs" author="false"
+		         version="true" use="true" maxmemory="1024m" protected="false" classpathref="lib.classpath">
+            <packageset dir="${dir.src.main}" defaultexcludes="yes">
+            </packageset>
+            <doctitle>QC Connector APIs</doctitle>
+        </javadoc>
+    </target>
+
+    <target name="clean" description="Clean QC connector">
+		<delete dir="${dir.build.main}" />
+        <delete dir="${dir.docs.main}" />
+        <delete dir="${dist.dir}" />
+        <delete dir="${build.dir}" />
+        <delete file="${qc-connector.zip}" />
+    </target>
+
+</project>

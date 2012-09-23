@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project name="QC Connector Execution Script" basedir=".">
+
+   <property environment="env"/>
+   <property name="config.dir" value="${basedir}/config"/>
+   <property name="lib.dir" value="${basedir}/lib"/>
+   <property name="qcClient" value="com.vmware.qc.client.QcClient"/>
+   <property name="uploadBulkResults" value="com.vmware.qc.client.UploadBulkResult2Qc"/>
+
+   <path id="lib.path">
+      <pathelement location="${config.dir}"/>
+      <fileset dir="${lib.dir}">
+         <include name="**/*.jar"/>
+      </fileset>
+   </path>
+
+   <property name="qc.test.instancename" value=""/>
+   <property name="qc.testset.name" value=""/>
+   <property name="qc.log.filenames" value=""/>
+
+   <target name="qc-client"
+           description="run com.vmware.qc.QcClient">
+      <condition property="propsSpecified">
+         <and>
+            <isset property="qc.test.name"/>
+            <isset property="qc.test.status"/>
+         </and>
+      </condition>
+      <fail unless="propsSpecified"
+            message="Please specify atleast qc.test.name and qc.test.status properties.${line.separator} 
+			         List of properties are ${line.separator}
+					     qc.testset.name, qc.test.name, qc.test.configid, qc.test.status, log.filenames"/>
+       <java classname="${qcClient}" fork="true" 
+	        classpathref="lib.path">
+         <jvmarg value="-Xmx512m"/>
+         <jvmarg value="-XX:PermSize=256m"/>
+         <jvmarg value="-XX:MaxPermSize=256m"/>
+         <jvmarg value="-Dorg.apache.commons.logging.Log=org.apache.commons.logging.impl.NoOpLog"/>
+         <jvmarg value="-Dqc.test.name=${qc.test.name}"/>
+         <jvmarg value="-Dqc.test.instancename=${qc.test.instancename}"/>
+         <jvmarg value="-Dqc.testset.name=${qc.testset.name}"/>
+         <jvmarg value="-Dqc.test.status=${qc.test.status}"/>
+         <jvmarg value="-Dqc.log.filenames=${qc.log.filenames}"/>
+       </java>
+   </target>
+
+   <target name="upload-bulk-results"
+           description="run com.vmware.qc.QcClient">
+      <condition property="propsSpecified">
+         <and>
+            <isset property="qc.result.file"/>
+            <isset property="qc.result.class"/>
+         </and>
+      </condition>
+      <fail unless="propsSpecified"
+            message="qc.result.file and/or qc.result.class are not specified"/>
+       <java classname="${uploadBulkResults}" fork="true" 
+	        classpathref="lib.path">
+         <jvmarg value="-Xmx512m"/>
+         <jvmarg value="-XX:PermSize=256m"/>
+         <jvmarg value="-XX:MaxPermSize=256m"/>
+         <jvmarg value="-Dorg.apache.commons.logging.Log=org.apache.commons.logging.impl.NoOpLog"/>
+         <jvmarg value="-Dqc.result.file=${qc.result.file}"/>
+         <jvmarg value="-Dqc.result.class=${qc.result.class}"/>
+         <jvmarg value="-Dqc.testset.name=${qc.testset.name}"/>
+       </java>
+   </target>
+</project>

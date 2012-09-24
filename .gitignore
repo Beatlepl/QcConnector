@@ -1,0 +1,7 @@
+*.zip
+*.bat
+*.csv
+build/
+bin/
+docs/
+*.class

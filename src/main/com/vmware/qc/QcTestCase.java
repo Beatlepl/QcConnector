@@ -11,7 +11,8 @@
 package com.vmware.qc;
 
 /**
- * @author bpaul
+ *
+ * Represents a TestCase from QC testCase plan.
  *
  */
 public class QcTestCase {

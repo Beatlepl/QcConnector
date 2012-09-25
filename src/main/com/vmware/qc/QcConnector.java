@@ -12,11 +12,13 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.configuration.XMLConfiguration;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.vmware.qc.exception.NotFound;
 import com.vmware.qc.exception.TestInstanceNotFound;
+import com.vmware.qc.exception.TestSetNotFound;
 
 /**
  * This class exposes a list of QC functionalities to read/create/update information related to the test into the QC.
@@ -41,15 +43,17 @@ public class QcConnector
    /**
     * Retrieves all test set under a specific testset folder in QC.
     *
-    * @param testSetFolderPath - testset folder path [ Example : Root/MN.Next/Beta/Cycle1/CoreVC/VC-ESX50i ].
+    * @param testSetFolderPath - testset folder path [ Example : Root\\MN.Next\\Beta\\Cycle1\\CoreVC\\VC-ESX50i ].
     * @return testset map containing testset id as key and testset name as value.
+    * @deprecated use {@link #getTestSets(String, boolean)}
     */
+   @Deprecated
    public Map<Long, String> getTestSets(String testSetFolderPath)
       throws Exception
    {
       Map<Long, String> testSets = null;
       /*
-       * If testSetIds are provided then work with that
+       * FIXME: If testSetIds are provided then work with that
        */
         if (QcConstants.QC_TESTSET_IDS != null && QcConstants.QC_TESTSET_IDS.length > 0) {
             testSets = new HashMap<Long, String>();
@@ -57,34 +61,70 @@ public class QcConnector
                 testSets.put(Long.valueOf(testSetId.trim()), "");
             }
         } else {
-            /*
-             * Start reading testset tree from root folder to last sub-folder in
-             * the specified folder path and
-             * then get all testsets from testset tree associated to last
-             * sub-folder.
-             */
-            XMLConfiguration testSetTree = getTestSetTree(null, true);
-            boolean foundTestSetFolders = true;
-            if (testSetTree != null) {
-                String[] testsetSubFolders = testSetFolderPath.split("/");
-                for (int cnt = 1; cnt < testsetSubFolders.length; cnt++) {
-                    long tsFolderId = QcXmlConfigUtil.getTestSetFolderId(testSetTree, testsetSubFolders[cnt]);
-                    if (tsFolderId > 0) {
-                        testSetTree = getTestSetTree(tsFolderId, cnt < testsetSubFolders.length - 1);
-                    } else {
-                        log.error(testsetSubFolders[cnt] + " testset folder is not found");
-                        foundTestSetFolders = false;
-                        break;
-                    }
-                }
-                if (foundTestSetFolders) {
-                    testSets = QcXmlConfigUtil.getTestSets(testSetTree);
-                }
-            } else {
-                log.error("Couldn't get testset folder under root folder");
-            }
+           List<TestSetInfo> testSetInfos = getTestSets(testSetFolderPath, true);
+           if (testSetInfos != null) {
+              testSets = new HashMap<Long, String>();
+              for(TestSetInfo testSetInfo : testSetInfos) {
+                 testSets.put(testSetInfo.getId(), testSetInfo.getName());
+              }
+           }
         }
       return testSets;
+   }
+
+   /**
+    * Retrieves all test sets under a specific folder and its sub-folders in QC.
+    *
+    * @param testSetFolderPath - testset folder path [ Example : Root\\MN.Next\\Beta\\Cycle1\\CoreVC\\VC-ESX50i ].
+    * @param includeSubFolders if this flag is true, test sets in sub-folders will be included, else will not be included.
+    * @return list of test sets.
+    */
+   public List<TestSetInfo> getTestSets(String testSetFolderPath,
+                                        Boolean includeSubFolders)
+                                        throws Exception
+   {
+      List<TestSetInfo> testSetInfos = null;
+      try {
+         QcRequest qcRequest = new QcRequest(QcConstants.QC_ENDPOINT_URL
+                  + "/test-sets");
+         qcRequest.addField("folderPath", testSetFolderPath + "\\");
+         XMLConfiguration testsetsData = restClient.get(qcRequest);
+         testSetInfos = QcXmlConfigUtil.getTestSets(testsetsData);
+      } catch (NotFound nf) {
+         log.warn("No test sets found in the folder :" + testSetFolderPath);
+      }
+
+      /**
+       * Use test-lab-tree service to return test sets in the given folder and
+       * its sub-folders.
+       */
+      if (testSetInfos != null && includeSubFolders) {
+         long targetFolderId = testSetInfos.get(0).getParentFolderId();
+         XMLConfiguration testSetTree = getTestSetTree(targetFolderId, true);
+         testSetInfos = QcXmlConfigUtil.getTestSetsFromTestSetTree(testSetTree);
+      }
+      return testSetInfos;
+   }
+
+   /**
+    * Returns a TestCases from QC TestPlan by its ids
+    *
+    * @param testcaseIds
+    * @return List<QcTestCase>
+    * @throws Exception
+    */
+   public List<QcTestCase> getTestCases(List<Long> testcaseIds) throws Exception {
+       List<QcTestCase> testCases = new ArrayList<QcTestCase>();
+       for (Long testcaseId : testcaseIds) {
+           QcRequest qcRequest = new QcRequest(QcConstants.QC_ENDPOINT_URL + "/test-case/" + testcaseId);
+           try {
+               XMLConfiguration config = restClient.get(qcRequest);
+               testCases.add(QcXmlConfigUtil.getTestcase(config));
+           } catch (NotFound notFound) {
+               log.warn("No testcase found for testCase id: " + testcaseId);
+           }
+       }
+       return testCases.size() > 0 ? testCases : null;
    }
 
    /**
@@ -98,9 +138,17 @@ public class QcConnector
                             String testsetName)
                             throws Exception
    {
-       Map<Long, String> testsets = getTestSets(testSetFolderPath);
-       log.info("Retrieved TestSets :" + testsets);
-       return QcUtil.getIdByName(testsets, testsetName);
+      long testSetId = 0;
+      Map<Long, String> testsets = getTestSets(testSetFolderPath);
+      log.info("Retrieved TestSets :" + testsets);
+      if (testsets != null) {
+         testSetId = QcUtil.getIdByName(testsets, testsetName);
+      }
+      if (testSetId == 0) {
+         throw new TestSetNotFound("No test set is found for test set name :"
+                  + testsetName);
+      }
+      return testSetId;
    }
 
    /**
@@ -148,28 +196,6 @@ public class QcConnector
       }
       return testInstances;
    }
-
-    /**
-     * Returns a TestCases from QC TestPlan by its ids
-     *
-     * @param testcaseIds
-     * @return List<QcTestCase>
-     * @throws Exception
-     */
-    public List<QcTestCase> getTestCases(List<Long> testcaseIds) throws Exception {
-        List<QcTestCase> testCases = new ArrayList<QcTestCase>();
-        ;
-        for (Long testcaseId : testcaseIds) {
-            QcRequest qcRequest = new QcRequest(QcConstants.QC_ENDPOINT_URL + "/test-case/" + testcaseId);
-            try {
-                XMLConfiguration config = restClient.get(qcRequest);
-                testCases.add(QcXmlConfigUtil.getTestcase(config));
-            } catch (NotFound notFound) {
-                log.warn("No testcase found for testCase id: " + testcaseId);
-            }
-        }
-        return testCases;
-    }
 
    /**
     * Gets a specific test instance's information from QC using its id.
@@ -273,15 +299,14 @@ public class QcConnector
       return postResult2Qc(testRunInfo);
    }
 
-   /**
-    * Posts a test run result into QC.
-    *
-    * @param testRunInfo - test run result information.
-    * @return testRun info object.
-    */
-   public TestRunInfo postResult2Qc(TestRunInfo testRunInfo)
-                                    throws Exception
-   {
+    /**
+     * Posts a test run result into QC.
+     *
+     * @param testRunInfo
+     *            - test run result information.
+     * @return testRun info object.
+     */
+    public TestRunInfo postResult2Qc(TestRunInfo testRunInfo) throws Exception {
         TestRunInfo newTestRunInfo = null;
         QcRequest qcRequest = new QcRequest(QcConstants.QC_ENDPOINT_URL + "/run");
         StringBuffer body = new StringBuffer();
@@ -291,22 +316,23 @@ public class QcConnector
         if (testRunInfo.getBuildNumbers() != null && !testRunInfo.getBuildNumbers().isEmpty()) {
             body.append("&build=").append(testRunInfo.getBuildNumbers().get(0));
         }
-        if (testRunInfo.getBugIds() != null && !testRunInfo.getBugIds().isEmpty()) {
-            body.append("&bugIDs=").append(testRunInfo.getBugIds());
+        if (testRunInfo.getBugIds() != null && testRunInfo.getBugIds().size() > 0) {
+            body.append("&bugIDs=").append(StringUtils.join(testRunInfo.getBugIds(), ","));
         }
         body.append("&runName=qcConnectorPoster");
         qcRequest.setRequestBody(body.toString());
-      qcRequest.addHeaderProperty("Accept", "application/xml");
-      qcRequest.addHeaderProperty("Content-Type", "application/x-www-form-urlencoded");
-      XMLConfiguration testRunData = restClient.post(qcRequest);
-      newTestRunInfo = QcXmlConfigUtil.getTestRunInfo(testRunData);
-      if (newTestRunInfo != null) {
-         log.info("Test result is posted into QC successfully :\n" + newTestRunInfo);
-      } else {
-         log.error("Post test result to QC failed");
-      }
-      return newTestRunInfo;
-   }
+        qcRequest.addHeaderProperty("Accept", "application/xml");
+        qcRequest.addHeaderProperty("Content-Type", "application/x-www-form-urlencoded");
+        XMLConfiguration testRunData = restClient.post(qcRequest);
+        newTestRunInfo = QcXmlConfigUtil.getTestRunInfo(testRunData);
+        if (newTestRunInfo != null) {
+            log.info("Test result is posted into QC successfully :\n" + newTestRunInfo);
+        } else {
+            log.error("Post test result to QC failed");
+        }
+        return newTestRunInfo;
+    }
+
 
    /**
     * Uploads a log file associated to test run id to its assigned log directory in QC repository.
@@ -343,9 +369,7 @@ public class QcConnector
                                            throws Exception
    {
       QcRequest qcRequest = new QcRequest(QcConstants.QC_ENDPOINT_URL + "/test-lab-tree");
-      if (testSetFolderId != null && testSetFolderId > 0) {
-         qcRequest.addField("folderID", testSetFolderId);
-      }
+      qcRequest.addField("folderID", testSetFolderId);
       qcRequest.addField("viewTestInstances", false);
       qcRequest.addField("viewOneLevelOnly", viewOneLevelOnly);
       XMLConfiguration testsetXmlData = restClient.get(qcRequest);

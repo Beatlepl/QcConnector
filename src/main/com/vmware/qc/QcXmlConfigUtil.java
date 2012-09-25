@@ -6,9 +6,7 @@
 package com.vmware.qc;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.configuration.HierarchicalConfiguration;
 import org.slf4j.Logger;
@@ -21,8 +19,9 @@ public class QcXmlConfigUtil
 {
    public static final String TESTINSTANCE_TAG = "TestInstance";
    public static final String TESTRUN_TAG = "TestRun";
+   public static final String TESTSET_TAG = "TestSet";
+   public static final String TESTSET1_TAG = "testSets.TestSet";
    public static final String TESTSET_FOLDER_TAG = "subFolders.TestSetFolder";
-   public static final String TESTSET_TAG = "testSets.TestSet";
    public static final String SUBFOLDER_TESTSET_TAG = "subFolders.TestSetFolder.testSets.TestSet";
 
    public static final String ID_TAG = "ID";
@@ -38,6 +37,7 @@ public class QcXmlConfigUtil
    public static final String FILEPATH_TAG = "filePath";
    public static final String BUILD_TAG = "build";
    public static final String TESTER_TAG = "tester";
+   public static final String PARENT_FOLDERID_TAG = "parentFolderID";
    public static final String TESTCASE_TAG = "TestCase";
    public static final String PRODUCT_TAG = "product";
    public static final String FUNCTIONALAREA_TAG = "funcArea";
@@ -51,31 +51,61 @@ public class QcXmlConfigUtil
    private final static Logger log = LoggerFactory.getLogger(QcXmlConfigUtil.class);
 
    /**
-    * Read list of testsets from xml data and returns testset id and names as a map.
+    * Get list of test sets from test set tree xml data.
     *
-    * @param testsetData - xml data that holds testset information.
-    * @return testset map[ key = testset id | value = testset name]
+    * @param testsetTreeData - xml data that holds testset tree information.
+    * @return list of test set objects.
     */
-   public static Map<Long, String> getTestSets(HierarchicalConfiguration testsetData)
+   public static List<TestSetInfo> getTestSetsFromTestSetTree(HierarchicalConfiguration testsetTreeData)
    {
-      Map<Long, String> testsetIdNames = new HashMap<Long, String>();
-      if (testsetData != null) {
-         List<HierarchicalConfiguration> testsets = testsetData.configurationsAt(TESTSET_TAG);
+      List<TestSetInfo> testsetInfos = new ArrayList<TestSetInfo>();
+      if (testsetTreeData != null) {
+         List<HierarchicalConfiguration> testsets = testsetTreeData.configurationsAt(TESTSET1_TAG);
          if (testsets != null && !testsets.isEmpty()) {
             for (HierarchicalConfiguration testset : testsets) {
-               testsetIdNames.put(testset.getLong(ID_TAG),
-                        testset.getString(NAME_TAG));
+               TestSetInfo testsetInfo = new TestSetInfo();
+               testsetInfo.setId(testset.getLong(ID_TAG));
+               testsetInfo.setName(testset.getString(NAME_TAG));
+               testsetInfo.setParentFolderId(testset.getLong(PARENT_FOLDERID_TAG));
+               testsetInfos.add(testsetInfo);
             }
          }
-         List<HierarchicalConfiguration> subfolderTestses = testsetData.configurationsAt(SUBFOLDER_TESTSET_TAG);
+         List<HierarchicalConfiguration> subfolderTestses = testsetTreeData.configurationsAt(SUBFOLDER_TESTSET_TAG);
          if (subfolderTestses != null && !subfolderTestses.isEmpty()) {
             for (HierarchicalConfiguration subfolderTestset : subfolderTestses) {
-               testsetIdNames.put(subfolderTestset.getLong(ID_TAG),
-                        subfolderTestset.getString(NAME_TAG));
+               TestSetInfo testsetInfo = new TestSetInfo();
+               testsetInfo.setId(subfolderTestset.getLong(ID_TAG));
+               testsetInfo.setName(subfolderTestset.getString(NAME_TAG));
+               testsetInfo.setParentFolderId(subfolderTestset.getLong(PARENT_FOLDERID_TAG));
+               testsetInfos.add(testsetInfo);
             }
          }
       }
-      return testsetIdNames;
+      return testsetInfos;
+   }
+
+   /**
+    * Read list of testsets from xml data and returns testset id and names as a map.
+    *
+    * @param testsetsData - xml data that holds a list of testsets.
+    * @return list of test set objects.
+    */
+   public static List<TestSetInfo> getTestSets(HierarchicalConfiguration testsetsData)
+   {
+      List<TestSetInfo> testsetInfos = new ArrayList<TestSetInfo>();
+      if (testsetsData != null) {
+         List<HierarchicalConfiguration> testsets = testsetsData.configurationsAt(TESTSET_TAG);
+         if (testsets != null && !testsets.isEmpty()) {
+            for (HierarchicalConfiguration testset : testsets) {
+               TestSetInfo testsetInfo = new TestSetInfo();
+               testsetInfo.setId(testset.getLong(ID_TAG));
+               testsetInfo.setName(testset.getString(NAME_TAG));
+               testsetInfo.setParentFolderId(testset.getLong(PARENT_FOLDERID_TAG));
+               testsetInfos.add(testsetInfo);
+            }
+         }
+      }
+      return testsetInfos;
    }
 
    /**
@@ -163,9 +193,7 @@ public class QcXmlConfigUtil
                 testInstanceInfo.setStatus(QcTestStatus.fromValue(testInstanceData.getString(STATUS_TAG)));
                 testInstanceInfo.setTestSetId(testInstanceData.getLong(TESTSETID_TAG));
             } catch (Exception e) {
-                log.error("Error while parsing test : " + testInstanceInfo.getName());
-                log.error(e.getLocalizedMessage());
-                e.printStackTrace();
+                log.error("Error while parsing test : " + testInstanceInfo.getName(), e);
             }
         }
         return testInstanceInfo;

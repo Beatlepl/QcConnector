@@ -16,11 +16,11 @@ public class TestRunInfo
    private long testInstanceId;
    private long testId;
    private String userId;
-   private List<String> buildNumbers;
+   private List<Integer> buildNumbers;
    private QcTestStatus status;
    private String logsLocation;
    private List<String> clientLogFilePaths;
-   private String bugIds;
+   private List<String> bugIds;
 
    /**
     * Return test run id.
@@ -187,7 +187,7 @@ public class TestRunInfo
     *
     * @return list of builds.
     */
-   public List<String> getBuildNumbers()
+   public List<Integer> getBuildNumbers()
    {
       return buildNumbers;
    }
@@ -197,7 +197,7 @@ public class TestRunInfo
     *
     * @param buildNumbers list of builds.
     */
-   public void setBuildNumbers(List<String> buildNumbers)
+   public void setBuildNumbers(List<Integer> buildNumbers)
    {
       this.buildNumbers = buildNumbers;
    }
@@ -243,18 +243,18 @@ public class TestRunInfo
       return isEqual;
    }
 
-    /**
-     * @return the bugIds
-     */
-    public String getBugIds() {
-        return bugIds;
-    }
+/**
+ * @return the bugIds
+ */
+public List<String> getBugIds() {
+    return bugIds;
+}
 
-    /**
-     * @param bugIds
-     *            the bugIds to set
-     */
-    public void setBugIds(String bugIds) {
-        this.bugIds = bugIds;
-    }
+/**
+ * @param bugIds the bugIds to set
+ */
+public void setBugIds(List<String> bugIds) {
+    this.bugIds = bugIds;
+}
+
 }

@@ -90,7 +90,7 @@ public class TestNgResultUploader {
     }
 
     private static void parseTestNgResultCreateCsv(List<String> urlsOrFiles, String csvFileName) {
-        List<TestResultData> testNgResultData =parseTestNgResultFromFilesOrUrls(urlsOrFiles);
+        List<TestResultData> testNgResultData = parseTestNgResultFromFilesOrUrls(urlsOrFiles);
         CsvResultFile csvResultFile = new CsvResultFile();
         try {
             System.out.println("Creating csv file...");
@@ -101,7 +101,7 @@ public class TestNgResultUploader {
         }
     }
 
-    private static List<TestResultData> parseTestNgResultFromFilesOrUrls(List<String> urlsOrFiles){
+    private static List<TestResultData> parseTestNgResultFromFilesOrUrls(List<String> urlsOrFiles) {
         List<TestResultData> testNgResultData = new ArrayList<TestResultData>();
         try {
             for (String url : urlsOrFiles) {
@@ -118,10 +118,11 @@ public class TestNgResultUploader {
     }
 
 
-    private static void compare(List<String> urlsOrFiles, String[] testSetIdArr) throws Exception{
-        List<TestResultData> testNgResultData =parseTestNgResultFromFilesOrUrls(urlsOrFiles);
+    private static void compare(List<String> urlsOrFiles, String[] testSetIdArr) throws Exception {
+        List<TestResultData> testNgResultData = parseTestNgResultFromFilesOrUrls(urlsOrFiles);
         List<String> testNgTests =
-                (List<String>) CollectionUtils.collect(testNgResultData, new BeanToPropertyValueTransformer("testName"));
+                (List<String>) CollectionUtils
+                        .collect(testNgResultData, new BeanToPropertyValueTransformer("testName"));
         Collections.sort(testNgTests);
 
         List<QcTestCase> qcTestCases = getAllTestCasesFromTestSets(testSetIdArr);
@@ -134,14 +135,17 @@ public class TestNgResultUploader {
         try {
             bw = new BufferedWriter(new FileWriter(csvFile));
 
-            for(String testNgTestName : testNgTests){
-                bw.write(testNgTestName+",");
-                for(String qcTestName: qcTestNames){
-                    if(qcTestName.contains(testNgTestName)){
-                        bw.write(qcTestName);
-                        break;
-                    }
+            for (String testNgTestName : testNgTests) {
+                bw.write(testNgTestName + ",");
+                // for(String qcTestName: qcTestNames){
+                // if(qcTestName.contains(testNgTestName)){
+                if (qcTestNames.contains(testNgTestName)) {
+                    bw.write(testNgTestName);
                 }
+
+                // break;
+                // }
+                // }
                 bw.write("\n");
             }
         } catch (Exception e) {
@@ -156,13 +160,14 @@ public class TestNgResultUploader {
 
     }
 
-
-    public static void main(String... args) throws Exception{
-
-        compare(Arrays.asList(new String[]{"http://cloud-hudson.eng.vmware.com/view/All/job/ETC-QE/ws/workspace-jenkins-ETC-QE-97/results-server-daily1/testng-results.xml"}), new String[]{"378"});
-
-    }
-
+//
+//    public static void main(String... args) throws Exception {
+//
+//        compare(Arrays
+//                .asList(new String[] { "http://cloud-hudson.eng.vmware.com/view/All/job/ETC-QE/ws/workspace-jenkins-ETC-QE-97/results-server-daily1/testng-results.xml" }),
+//                new String[] { "378" });
+//
+//    }
 
 
     /**
@@ -171,58 +176,58 @@ public class TestNgResultUploader {
      * @param args
      * @throws Exception
      */
-//    public static void main(String args[]) throws Exception {
-//        String usageString =
-//                "\n\nFor parsing a testng-results.xml file and create a csv file out of it use \n\t createCsvFile -resultsFile <coma separated fileNames or http Urls> -csvFile <csvFileName> \n "
-//                        + " For uploading results from .csv file or testng-results.xml file use \n \t uploadResult -resultsFile <fileName> -Dqc.testset.ids=<coma separted testSetIds> \n"
-//                        + " For appending the csv file with Non Automated tests from testSets \n\t appendCsvFile -csvFile <fileName> -Dqc.testset.ids=<coma separted testSetIds> \n";
-//        String resultsFile = null;
-//        String csvFile = null;
-//        List<String> argList = Arrays.asList(args);
-//        if (args != null && args.length > 0) {
-//            resultsFile = argList.get(argList.indexOf("-resultsFile") + 1);
-//            if (argList.contains("createCsvFile")) {
-//                csvFile = argList.get(argList.indexOf("-csvFile") + 1);
-//                TestNgResultUploader.parseTestNgResultCreateCsv(Arrays.asList(resultsFile.split(",")), csvFile);
-//            } else if (argList.contains("uploadResult")) {
-//                if (QcConstants.QC_TESTSET_IDS == null) {
-//                    System.err.println("Please provide coma separated testSetIds after -Dqc.testset.ids=");
-//                    System.exit(0);
-//                }
-//                ResultFile resultFile = null;
-//                if (resultsFile.endsWith(".csv")) {
-//                    resultFile = new CsvResultFile();
-//                } else if (resultsFile.endsWith(".xml")) {
-//                    resultFile = new TestNgResultFile();
-//                } else {
-//                    System.err.print("Invalid file format");
-//                    System.exit(0);
-//                }
-//                resultFile.setResultFileName(resultsFile);
-//                PostResultFile2Qc postResultFile2Qc = new PostResultFile2Qc();
-//                postResultFile2Qc.post2Qc(resultFile);
-//            } else if (argList.contains("appendCsvFile")) {
-//                if (QcConstants.QC_TESTSET_IDS == null) {
-//                    System.err.println("Please provide coma separated testSetIds after -Dqc.testset.ids=");
-//                    System.exit(0);
-//                }
-//                if (argList.indexOf("-csvFile") == 0) {
-//                    System.err.println("Please provide csv file to be appended as -csvFile <csvFilenameWithPath>");
-//                    System.exit(0);
-//                }
-//                List<QcTestCase> qcTestCases = getNonAutomatedTests(QcConstants.QC_TESTSET_IDS);
-//                if (qcTestCases != null && qcTestCases.size() > 0) {
-//                    appendToCsvFile("csvFile.csv", qcTestCases);
-//                    System.out.println("Appended the csv file successfully");
-//                } else {
-//                    System.out.println("No Non Automated tests found in the test set Id/s");
-//                }
-//            } else {
-//                System.err.println("Error: Usage :-" + usageString);
-//            }
-//        } else {
-//            System.err.println("Error: Usage :-" + usageString);
-//        }
-//    }
+    public static void main(String args[]) throws Exception {
+        String usageString =
+                "\n\nFor parsing a testng-results.xml file and create a csv file out of it use \n\t createCsvFile -resultsFile <coma separated fileNames or http Urls> -csvFile <csvFileName> \n "
+                        + " For uploading results from .csv file or testng-results.xml file use \n \t uploadResult -resultsFile <fileName> -Dqc.testset.ids=<coma separted testSetIds> \n"
+                        + " For appending the csv file with Non Automated tests from testSets \n\t appendCsvFile -csvFile <fileName> -Dqc.testset.ids=<coma separted testSetIds> \n";
+        String resultsFile = null;
+        String csvFile = null;
+        List<String> argList = Arrays.asList(args);
+        if (args != null && args.length > 0) {
+            resultsFile = argList.get(argList.indexOf("-resultsFile") + 1);
+            if (argList.contains("createCsvFile")) {
+                csvFile = argList.get(argList.indexOf("-csvFile") + 1);
+                TestNgResultUploader.parseTestNgResultCreateCsv(Arrays.asList(resultsFile.split(",")), csvFile);
+            } else if (argList.contains("uploadResult")) {
+                if (QcConstants.QC_TESTSET_IDS == null) {
+                    System.err.println("Please provide coma separated testSetIds after -Dqc.testset.ids=");
+                    System.exit(0);
+                }
+                ResultFile resultFile = null;
+                if (resultsFile.endsWith(".csv")) {
+                    resultFile = new CsvResultFile();
+                } else if (resultsFile.endsWith(".xml")) {
+                    resultFile = new TestNgResultFile();
+                } else {
+                    System.err.print("Invalid file format");
+                    System.exit(0);
+                }
+                resultFile.setResultFileName(resultsFile);
+                PostResultFile2Qc postResultFile2Qc = new PostResultFile2Qc();
+                postResultFile2Qc.post2Qc(resultFile);
+            } else if (argList.contains("appendCsvFile")) {
+                if (QcConstants.QC_TESTSET_IDS == null) {
+                    System.err.println("Please provide coma separated testSetIds after -Dqc.testset.ids=");
+                    System.exit(0);
+                }
+                if (argList.indexOf("-csvFile") == 0) {
+                    System.err.println("Please provide csv file to be appended as -csvFile <csvFilenameWithPath>");
+                    System.exit(0);
+                }
+                List<QcTestCase> qcTestCases = getNonAutomatedTests(QcConstants.QC_TESTSET_IDS);
+                if (qcTestCases != null && qcTestCases.size() > 0) {
+                    appendToCsvFile("csvFile.csv", qcTestCases);
+                    System.out.println("Appended the csv file successfully");
+                } else {
+                    System.out.println("No Non Automated tests found in the test set Id/s");
+                }
+            } else {
+                System.err.println("Error: Usage :-" + usageString);
+            }
+        } else {
+            System.err.println("Error: Usage :-" + usageString);
+        }
+    }
 
 }

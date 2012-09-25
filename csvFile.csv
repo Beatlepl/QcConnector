@@ -1,2 +1,2 @@
-rm.evdc.mergepvdc.MergeWithHigherPvdcContaingDiffVersionVMs.mergeWithHigherPvdcContainingLowerVersionVM,Failed
-c2.snapshot.SnapshotTests.createVAppSnapshotWithSnapshottedVMs{1-0-1-1},Passed
+rm.evdc.mergepvdc.MergeWithHigherPvdcContaingDiffVersionVMs.mergeWithHigherPvdcContainingLowerVersionVM,Failed,8989
+c2.snapshot.SnapshotTests.createVAppSnapshotWithSnapshottedVMs{1-0-1-1},Passed,8080;9090

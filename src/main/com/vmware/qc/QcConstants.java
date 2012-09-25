@@ -23,7 +23,7 @@ public final class QcConstants
    public static final String QC_TESTSETFOLDER_PATH;
    public static final String QC_ENDPOINT_URL;
    public static final boolean OVERWRITE_PASS_STATUS;
-   public static final List<String> QC_BUILD_NUMBERS;
+   public static List<Integer> QC_BUILD_NUMBERS;
    public static final String QC_TESTSET_NAME;
    public static final String[] QC_TESTSET_IDS;
 

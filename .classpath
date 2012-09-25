@@ -14,5 +14,5 @@
 	<classpathentry kind="lib" path="lib/testng-beta.jar"/>
 	<classpathentry kind="lib" path="lib/testng-plugin-0.8.jar"/>
 	<classpathentry kind="lib" path="lib/commons-beanutils-1.8.0.jar"/>
-	<classpathentry kind="output" path="bin"/>
+	<classpathentry kind="output" path="build"/>
 </classpath>

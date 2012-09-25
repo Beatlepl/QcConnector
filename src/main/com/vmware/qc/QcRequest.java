@@ -6,8 +6,10 @@ package com.vmware.qc;
 
 import java.net.URLEncoder;
 import java.util.Arrays;
-import java.util.Hashtable;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -24,8 +26,8 @@ import java.util.Properties;
 public class QcRequest
 {
    private String uri;
-   private Map<String, List<Object>> fields = new Hashtable<String, List<Object>>();
-   private Map<String, List<Object>> customFields = new Hashtable<String, List<Object>>();
+   private Map<String, List<Object>> fields = Collections.synchronizedMap(new LinkedHashMap<String, List<Object>>());
+   private Map<String, List<Object>> customFields = Collections.synchronizedMap(new LinkedHashMap<String, List<Object>>());
    private Properties headerProps = new Properties();
    private String requestBody = null;
    public static final String BOUNDARY = "*****";
@@ -147,14 +149,17 @@ public class QcRequest
          while(meIt.hasNext()) {
             Map.Entry<String, List<Object>> me = meIt.next();
             queryString.append(me.getKey() + "=");
-            Iterator listIt = me.getValue().iterator();
-            while(listIt.hasNext()) {
-               Object fieldValue = listIt.next();
-               try {
-                  queryString.append(URLEncoder.encode(fieldValue.toString(), "UTF-8"));
-               } catch(Exception ex) { }
-               if (listIt.hasNext()) {
-                  queryString.append(",");
+            if (me.getValue() != null) {
+               Iterator listIt = me.getValue().iterator();
+               while(listIt.hasNext()) {
+                  Object fieldValue = listIt.next();
+                  try {
+                     queryString.append(fieldValue != null ? URLEncoder.encode(
+                              fieldValue.toString(), "UTF-8") : "");
+                  } catch(Exception ex) { }
+                  if (listIt.hasNext()) {
+                     queryString.append(",");
+                  }
                }
             }
             if (meIt.hasNext()) {

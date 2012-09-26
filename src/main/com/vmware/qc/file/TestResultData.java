@@ -5,7 +5,9 @@
  */
 package com.vmware.qc.file;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.vmware.qc.QcTestStatus;
 
@@ -21,6 +23,7 @@ public class TestResultData
    private List<String> artifactPaths;
    private List<Integer> buildNumbers;
    private List<String> bugIds;
+   private Map<String, String> customFields = new HashMap<String, String>();
 
    /**
     * Return test name.
@@ -153,18 +156,38 @@ public class TestResultData
       return sb.toString();
    }
 
-/**
- * @return the bugIds
- */
-public List<String> getBugIds() {
-    return bugIds;
-}
+    /**
+     * @return the bugIds
+     */
+    public List<String> getBugIds() {
+        return bugIds;
+    }
 
-/**
- * @param bugIds the bugIds to set
- */
-public void setBugIds(List<String> bugIds) {
-    this.bugIds = bugIds;
-}
+    /**
+     * @param bugIds
+     *            the bugIds to set
+     */
+    public void setBugIds(List<String> bugIds) {
+        this.bugIds = bugIds;
+    }
+
+    /**
+     * @return the customFields
+     */
+    public Map<String, String> getCustomFields() {
+        return customFields;
+    }
+
+    /**
+     * @param customFields
+     *            the customFields to set
+     */
+    public void setCustomFields(Map<String, String> customFields) {
+        this.customFields = customFields;
+    }
+
+    public void addCustomField(String fieldName, String fieldValue){
+        this.customFields.put(fieldName, fieldValue);
+    }
 
 }

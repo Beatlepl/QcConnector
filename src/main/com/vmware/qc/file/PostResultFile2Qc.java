@@ -85,6 +85,7 @@ public class PostResultFile2Qc
             testrunInfo.setUserId(QcConstants.QC_USERID);
             testrunInfo.setBuildNumbers(resultData.getBuildNumbers() == null ? QcConstants.QC_BUILD_NUMBERS
                      : resultData.getBuildNumbers());
+            testrunInfo.setCustomFields(resultData.getCustomFields());
             postResult2Qc.addToQueue(testrunInfo);
             log.debug("Testrun info :" + testrunInfo);
          } else {

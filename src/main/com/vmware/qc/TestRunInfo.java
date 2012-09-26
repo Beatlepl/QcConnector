@@ -4,7 +4,9 @@
  */
 package com.vmware.qc;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Contains test run information.
@@ -21,6 +23,7 @@ public class TestRunInfo
    private String logsLocation;
    private List<String> clientLogFilePaths;
    private List<String> bugIds;
+   public Map<String, String> customFields = new HashMap<String, String>();
 
    /**
     * Return test run id.
@@ -255,6 +258,20 @@ public List<String> getBugIds() {
  */
 public void setBugIds(List<String> bugIds) {
     this.bugIds = bugIds;
+}
+
+/**
+ * @return the customFields
+ */
+public Map<String, String> getCustomFields() {
+    return customFields;
+}
+
+/**
+ * @param customFields the customFields to set
+ */
+public void setCustomFields(Map<String, String> customFields) {
+    this.customFields = customFields;
 }
 
 }

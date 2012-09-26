@@ -8,6 +8,7 @@ package com.vmware.qc;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -318,6 +319,15 @@ public class QcConnector
         }
         if (testRunInfo.getBugIds() != null && testRunInfo.getBugIds().size() > 0) {
             body.append("&bugIDs=").append(StringUtils.join(testRunInfo.getBugIds(), ","));
+        }
+        if (testRunInfo.getCustomFields() != null && testRunInfo.getCustomFields().size() > 0) {
+            body.append("&customFields={");
+            Iterator<String> itr = testRunInfo.getCustomFields().keySet().iterator();
+            while (itr.hasNext()) {
+                String name = itr.next();
+                body.append(name).append("[").append(testRunInfo.getCustomFields().get(name)).append("]");
+            }
+            body.append("}");
         }
         body.append("&runName=qcConnectorPoster");
         qcRequest.setRequestBody(body.toString());

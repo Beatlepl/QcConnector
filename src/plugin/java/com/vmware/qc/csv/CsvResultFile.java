@@ -69,6 +69,8 @@ public class CsvResultFile implements ResultFile {
                         resultData.setTestStatus(toTestStatus(csvValues[i]));
                     } else if (i == 2) {
                         resultData.setBugIds(Arrays.asList(csvValues[i].split(";")));
+                    } else if (i== 3) {
+                        resultData.addCustomField("user-template-04", csvValues[i]);
                     }
                 }
                 resultData.setTestSetName("");

@@ -300,48 +300,48 @@ public class QcConnector
       return postResult2Qc(testRunInfo);
    }
 
-    /**
-     * Posts a test run result into QC.
-     *
-     * @param testRunInfo
-     *            - test run result information.
-     * @return testRun info object.
-     */
-    public TestRunInfo postResult2Qc(TestRunInfo testRunInfo) throws Exception {
-        TestRunInfo newTestRunInfo = null;
-        QcRequest qcRequest = new QcRequest(QcConstants.QC_ENDPOINT_URL + "/run");
-        StringBuffer body = new StringBuffer();
-        body.append("tester=").append(testRunInfo.getUserId());
-        body.append("&testInstanceID=").append(testRunInfo.getTestInstanceId());
-        body.append("&status=").append(testRunInfo.getStatus());
-        if (testRunInfo.getBuildNumbers() != null && !testRunInfo.getBuildNumbers().isEmpty()) {
-            body.append("&build=").append(testRunInfo.getBuildNumbers().get(0));
-        }
-        if (testRunInfo.getBugIds() != null && testRunInfo.getBugIds().size() > 0) {
-            body.append("&bugIDs=").append(StringUtils.join(testRunInfo.getBugIds(), ","));
-        }
-        if (testRunInfo.getCustomFields() != null && testRunInfo.getCustomFields().size() > 0) {
-            body.append("&customFields={");
-            Iterator<String> itr = testRunInfo.getCustomFields().keySet().iterator();
-            while (itr.hasNext()) {
-                String name = itr.next();
-                body.append(name).append("[").append(testRunInfo.getCustomFields().get(name)).append("]");
-            }
-            body.append("}");
-        }
-        body.append("&runName=qcConnectorPoster");
-        qcRequest.setRequestBody(body.toString());
-        qcRequest.addHeaderProperty("Accept", "application/xml");
-        qcRequest.addHeaderProperty("Content-Type", "application/x-www-form-urlencoded");
-        XMLConfiguration testRunData = restClient.post(qcRequest);
-        newTestRunInfo = QcXmlConfigUtil.getTestRunInfo(testRunData);
-        if (newTestRunInfo != null) {
-            log.info("Test result is posted into QC successfully :\n" + newTestRunInfo);
-        } else {
-            log.error("Post test result to QC failed");
-        }
-        return newTestRunInfo;
-    }
+   /**
+    * Posts a test run result into QC.
+    *
+    * @param testRunInfo
+    *            - test run result information.
+    * @return testRun info object.
+    */
+   public TestRunInfo postResult2Qc(TestRunInfo testRunInfo) throws Exception {
+       TestRunInfo newTestRunInfo = null;
+       QcRequest qcRequest = new QcRequest(QcConstants.QC_ENDPOINT_URL + "/run");
+       StringBuffer body = new StringBuffer();
+       body.append("tester=").append(testRunInfo.getUserId());
+       body.append("&testInstanceID=").append(testRunInfo.getTestInstanceId());
+       body.append("&status=").append(testRunInfo.getStatus());
+       if (testRunInfo.getBuildNumbers() != null && !testRunInfo.getBuildNumbers().isEmpty()) {
+           body.append("&build=").append(testRunInfo.getBuildNumbers().get(0));
+       }
+       if (testRunInfo.getBugIds() != null && testRunInfo.getBugIds().size() > 0) {
+           body.append("&bugIDs=").append(StringUtils.join(testRunInfo.getBugIds(), ","));
+       }
+       if (testRunInfo.getCustomFields() != null && testRunInfo.getCustomFields().size() > 0) {
+           body.append("&customFields={");
+           Iterator<String> itr = testRunInfo.getCustomFields().keySet().iterator();
+           while (itr.hasNext()) {
+               String name = itr.next();
+               body.append(name).append("[").append(testRunInfo.getCustomFields().get(name)).append("]");
+           }
+           body.append("}");
+       }
+       body.append("&runName=qcConnectorPoster");
+       qcRequest.setRequestBody(body.toString());
+       qcRequest.addHeaderProperty("Accept", "application/xml");
+       qcRequest.addHeaderProperty("Content-Type", "application/x-www-form-urlencoded");
+       XMLConfiguration testRunData = restClient.post(qcRequest);
+       newTestRunInfo = QcXmlConfigUtil.getTestRunInfo(testRunData);
+       if (newTestRunInfo != null) {
+           log.info("Test result is posted into QC successfully :\n" + newTestRunInfo);
+       } else {
+           log.error("Post test result to QC failed");
+       }
+       return newTestRunInfo;
+   }
 
 
    /**

@@ -246,32 +246,34 @@ public class TestRunInfo
       return isEqual;
    }
 
-/**
- * @return the bugIds
- */
-public List<String> getBugIds() {
-    return bugIds;
-}
+    /**
+     * @return the bugIds
+     */
+    public List<String> getBugIds() {
+        return bugIds;
+    }
 
-/**
- * @param bugIds the bugIds to set
- */
-public void setBugIds(List<String> bugIds) {
-    this.bugIds = bugIds;
-}
+    /**
+     * @param bugIds
+     *            the bugIds to set
+     */
+    public void setBugIds(List<String> bugIds) {
+        this.bugIds = bugIds;
+    }
 
-/**
- * @return the customFields
- */
-public Map<String, String> getCustomFields() {
-    return customFields;
-}
+    /**
+     * @return the customFields
+     */
+    public Map<String, String> getCustomFields() {
+        return customFields;
+    }
 
-/**
- * @param customFields the customFields to set
- */
-public void setCustomFields(Map<String, String> customFields) {
-    this.customFields = customFields;
-}
+    /**
+     * @param customFields
+     *            the customFields to set
+     */
+    public void setCustomFields(Map<String, String> customFields) {
+        this.customFields = customFields;
+    }
 
 }

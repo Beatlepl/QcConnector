@@ -63,10 +63,19 @@ public class TestNgResultParser {
                         if (testNodes.item(j).getAttributes().getNamedItem("is-config") == null) {
                             String fdqTestName = classNodes.item(i).getAttributes().getNamedItem("name").getNodeValue();
                             String shortTestName = fdqTestName.substring(fdqTestName.indexOf("tests.server") + 13);
+                            Node paramsNode = configParser.getNode("params", testNodes.item(j));
+                            if(null != paramsNode){
+                                String firstParamValue = configParser.getString("param/value",paramsNode);
+                                testResultMap.put(
+                                        shortTestName + "."
+                                                + testNodes.item(j).getAttributes().getNamedItem("name").getNodeValue()+"-"+firstParamValue.trim(),
+                                        testNodes.item(j).getAttributes().getNamedItem("status").getNodeValue());
+                            } else {
                             testResultMap.put(
                                     shortTestName + "."
                                             + testNodes.item(j).getAttributes().getNamedItem("name").getNodeValue(),
                                     testNodes.item(j).getAttributes().getNamedItem("status").getNodeValue());
+                            }
                         }
                     }
                 }
